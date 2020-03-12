@@ -1,18 +1,6 @@
 steps:
-  - label: ":pytest: Run unit tests"
-    commands: "sh ./scripts/unit_tests.sh"
-    plugins:
-      - docker#v3.5.0:
-          image: "quay.io/pypa/manylinux2010_x86_64"
-          propagate-environment: true
-          always-pull: true
-    agents:
-      queue: "annalise-build"
-
-  - wait
-
   - label: ":partyparrot: Build package"
-    commands: "sh ./scripts/build_deid.sh"
+    commands: "sh ./scripts/build.sh"
     plugins:
       - docker#v3.5.0:
           image: "quay.io/pypa/manylinux2010_x86_64"
