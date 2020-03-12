@@ -1,0 +1,24 @@
+[run]
+omit =
+    tests/*
+    */test*.py
+    */migrations/*
+    */wsgi.py
+    */apps.py
+    *_version.py
+parallel = true
+
+[paths]
+source =
+    s3pkgup 
+
+[report]
+precision = 2
+include =
+    s3pkgup/*.py 
+exclude_lines =
+    def __str__
+    pragma: no cover
+
+[html]
+directory = coverage_html_report
