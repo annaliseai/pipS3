@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+import sys
 
 import boto3
 import pkg_resources
@@ -36,6 +37,7 @@ def get_key_name(wheel):
 
 def upload_to_s3(wheel, key):
     try:
+        logger.info('Uploading %s to S3', key)
         s3.upload_file(wheel, bucket, key, ExtraArgs={'ACL': 'public-read'})
     except Exception as e:
         print(str(e))
