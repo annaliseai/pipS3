@@ -26,8 +26,10 @@ logger = logging.getLogger("s3pkg")
 
 
 def get_packages():
-    for filename in glob.glob('dist/((*whl)|(*.tar.gz))'):
-        yield filename 
+    for filename in glob.glob('dist/*.*'):
+        ext = os.path.splitext(filename)[1]
+        if ext in ['.gz', '.whl']:
+            yield filename 
 
 
 def get_key_name(wheel):
@@ -80,10 +82,14 @@ def upload_index():
 
 
 def publish_packages():
+    at_least_one = False
     for pkg in get_packages():
         key = get_key_name(pkg)
         upload_to_s3(pkg, key)
-    prefix = f"{root_prefix}/{project_name}/"
-    bucket_listing = list_keys(prefix)
-    index = generate_template(bucket_listing)
-    upload_index()
+        prefix = f"{root_prefix}/{project_name}/"
+        bucket_listing = list_keys(prefix)
+        index = generate_template(bucket_listing)
+        upload_index()
+        at_least_one = True
+    if not at_least_one:
+        raise EnvironmentError("0 packages published")
