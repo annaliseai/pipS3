@@ -2,15 +2,16 @@
 
 """Console script for s3pkgup."""
 import sys
+
 import click
+
+from s3pkgup import publish_wheel
 
 
 @click.command()
 def main(args=None):
     """Console script for s3pkgup."""
-    click.echo("Replace this message by putting your code into "
-               "s3pkgup.cli.main")
-    click.echo("See click documentation at https://click.palletsprojects.com/")
+    publish_wheel()
     return 0
 
 

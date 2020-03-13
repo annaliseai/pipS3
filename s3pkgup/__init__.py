@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 
 import boto3
@@ -17,6 +18,9 @@ project_name = os.environ['BUILDKITE_PIPELINE_SLUG']
 index_template = pkg_resources.resource_filename(__name__, 'index.html.j2')
 
 artifacts_path = './artifacts'
+
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+logger = logging.getLogger('s3pkg')
 
 
 def get_wheels():
@@ -69,17 +73,12 @@ def upload_index():
         print(str(e))
 
 
-def main():
+def publish_wheel():
     wheels = get_wheels()
     for wheel in wheels:
         key = get_key_name(wheel)
         upload_to_s3(wheel, key)
-    #  generate index (trailing slash is req'd)
     prefix = f'{root_prefix}/{project_name}/'
     bucket_listing = list_keys(prefix)
     index = generate_template(bucket_listing)
     upload_index()
-
-
-if __name__ == '__main__':
-    main()
