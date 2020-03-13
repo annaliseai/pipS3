@@ -14,7 +14,7 @@ root_prefix = 'simple'
 #  variables
 project_name = os.environ['BUILDKITE_PIPELINE_SLUG']
 
-index_template = pkg_resources(__name__, 'index.html.j2')
+index_template = pkg_resources.resource_filename(__name__, 'index.html.j2')
 
 artifacts_path = './artifacts'
 
