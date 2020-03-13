@@ -26,9 +26,8 @@ logger = logging.getLogger("s3pkg")
 
 
 def get_packages():
-    for ext in ['*.tar.gz', '*.whl']:
-        for filename in glob.glob(os.path.join('dist', ext)):
-            yield filename 
+    for filename in glob.glob('dist/((*whl)|(*.tar.gz))'):
+        yield filename 
 
 
 def get_key_name(wheel):
