@@ -19,6 +19,7 @@ project_name = os.environ['BUILDKITE_PIPELINE_SLUG']
 index_template = pkg_resources.resource_filename(__name__, 'data/index.html.j2')
 
 artifacts_path = './artifacts'
+os.makedirs(artifacts_path, exist_ok=True)
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger('s3pkg')
@@ -63,7 +64,7 @@ def generate_template(bucket_listing):
     with open(index_template) as f:
         template = Template(f.read())
     output = template.render(keys=keys)
-    with open(os.path.join(artifacts_path, 'index.html', 'w')) as f:
+    with open(os.path.join(artifacts_path, 'index.html'), 'w') as f:
         f.write(output)
 
 
