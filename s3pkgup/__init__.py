@@ -13,8 +13,7 @@ s3 = boto3.client("s3")
 https_endpoint = "http://pypi-prod-annalise-ai.s3-website-ap-southeast-2.amazonaws.com"
 bucket = "pypi-prod-annalise-ai"
 root_prefix = "simple"
-#  variables
-project_name = os.environ["BUILDKITE_PIPELINE_SLUG"]
+
 
 index_template = pkg_resources.resource_filename(__name__, "data/index.html.j2")
 
@@ -32,7 +31,7 @@ def get_packages():
             yield filename 
 
 
-def get_key_name(wheel):
+def get_key_name(wheel, project_name):
     object = os.path.basename(wheel)
     key = f"{root_prefix}/{project_name}/{object}"
     return key
@@ -68,7 +67,7 @@ def generate_template(bucket_listing):
         f.write(output)
 
 
-def upload_index():
+def upload_index(project_name):
     uri = f"{root_prefix}/{project_name}/index.html"
     try:
         s3.upload_file(
@@ -81,15 +80,19 @@ def upload_index():
         print(str(e))
 
 
-def publish_packages():
+def publish_packages(project_name=None):
+
+    if project_name is None:
+        project_name = os.environ["BUILDKITE_PIPELINE_SLUG"]
+
     at_least_one = False
     for pkg in get_packages():
-        key = get_key_name(pkg)
+        key = get_key_name(pkg, project_name)
         upload_to_s3(pkg, key)
         prefix = f"{root_prefix}/{project_name}/"
         bucket_listing = list_keys(prefix)
         index = generate_template(bucket_listing)
-        upload_index()
+        upload_index(project_name)
         at_least_one = True
     if not at_least_one:
         raise EnvironmentError("0 packages published")

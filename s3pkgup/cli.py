@@ -9,9 +9,10 @@ from s3pkgup import publish_packages
 
 
 @click.command()
-def main(args=None):
+@click.option('--project', default=None, help='Project Name')
+def main(project):
     """Console script for s3pkgup."""
-    publish_packages()
+    publish_packages(project)
     return 0
 
 
