@@ -5,13 +5,13 @@ import sys
 
 import click
 
-from s3pkgup import publish_wheel
+from s3pkgup import publish_packages
 
 
 @click.command()
 def main(args=None):
     """Console script for s3pkgup."""
-    publish_wheel()
+    publish_packages()
     return 0
 
 
