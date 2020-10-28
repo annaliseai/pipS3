@@ -51,7 +51,7 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint: ## check style with flake8
-	flake8 s3pkgup tests
+	flake8 pips3 tests
 
 test: ## run tests quickly with the default Python
 	pytest
@@ -60,15 +60,15 @@ test-all: ## run tests on every Python version with tox
 	tox
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source s3pkgup -m pytest
+	coverage run --source pips3 -m pytest
 	coverage report -m
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
 docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/s3pkgup.rst
+	rm -f docs/pips3.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ s3pkgup
+	sphinx-apidoc -o docs/ pips3
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html

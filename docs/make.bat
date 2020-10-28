@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=s3pkgup
+set SPHINXPROJ=pips3
 
 if "%1" == "" goto help
 

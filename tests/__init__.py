@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-"""Unit test package for s3pkgup."""
+"""Unit test package for pips3."""
