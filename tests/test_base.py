@@ -129,8 +129,8 @@ def test_upload_index():
 @mock_s3
 @patch('pips3.base.PipS3.find_package_files',
        return_value=[
-           'docs/index.rst',
-           'docs/readme.rst',
+           'tests/assets/pips3-0.1.0.dev0.whl',
+           'tests/assets/pips3-0.1.0.whl',
        ])
 def test_publish_packages(files_mock):
     """Publish packages"""
@@ -138,21 +138,20 @@ def test_publish_packages(files_mock):
     s3_client = boto3.client('s3', region_name='us-east-1')
     s3_client.create_bucket(Bucket=BUCKET)
 
-    package = "pips3"
     prefix = "simple"
 
-    publish_packages(ENDPOINT_URL, BUCKET, package)
+    publish_packages(ENDPOINT_URL, BUCKET)
 
     # Get the index
     index = s3_client.get_object(Bucket=BUCKET,
-                                 Key=f'{prefix}/{package}/index.html')
+                                 Key=f'{prefix}/pips3/index.html')
     index = index['Body'].read().decode('utf-8')
 
     expected_index = f"""<!DOCTYPE html>
 <html>
   <body>
-    <a href="{ ENDPOINT_URL }/simple/pips3/index.rst">index.rst</a>
-    <a href="{ ENDPOINT_URL }/simple/pips3/readme.rst">readme.rst</a>
+    <a href="{ ENDPOINT_URL }/simple/pips3/pips3-0.1.0.dev0.whl">pips3-0.1.0.dev0.whl</a>
+    <a href="{ ENDPOINT_URL }/simple/pips3/pips3-0.1.0.whl">pips3-0.1.0.whl</a>
   </body>
 </html>"""
 

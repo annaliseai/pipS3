@@ -188,18 +188,26 @@ class PipS3:
                                   ContentType="text/html")
 
 
-def publish_packages(endpoint: str, bucket: str, package_name: str):
+def publish_packages(endpoint: str, bucket: str):
     """Publish current package files
 
     Args:
         endpoint (str): The endpoint for the S3-like service 
         bucket (str): The name of the bucket to use 
-        package_name (str): The name of the package 
     """
 
     uploader = PipS3(endpoint, bucket)
 
+    package_name = None
+
     for upload_file in PipS3.find_package_files():
+
+        # Get the package name
+        if package_name is None:
+
+            package_name = os.path.basename(upload_file).split('-')[0]
+            package_name = package_name.replace('_', '-')
+
         uploader.upload_package(upload_file, package_name)
 
     # Update the index

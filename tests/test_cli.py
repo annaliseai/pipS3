@@ -20,12 +20,10 @@ def test_command_line_interface(publish_mock):
     """Test the CLI."""
     runner = CliRunner()
 
-    result = runner.invoke(
-        cli.main,
-        ['--endpoint', URL, '--bucket', BUCKET, '--package', PACKAGE])
+    result = runner.invoke(cli.main, ['--endpoint', URL, '--bucket', BUCKET])
 
     assert result.exit_code == 0
-    publish_mock.assert_called_with(URL, BUCKET, PACKAGE)
+    publish_mock.assert_called_with(URL, BUCKET)
 
 
 @patch('pips3.cli.publish_packages')
@@ -34,14 +32,13 @@ def test_command_line_interface_envars(publish_mock, monkeypatch):
 
     monkeypatch.setenv('PIPS3_ENDPOINT', URL)
     monkeypatch.setenv('PIPS3_BUCKET', BUCKET)
-    monkeypatch.setenv('PIPS3_PACKAGE', PACKAGE)
 
     runner = CliRunner()
 
     result = runner.invoke(cli.main)
 
     assert result.exit_code == 0
-    publish_mock.assert_called_with(URL, BUCKET, PACKAGE)
+    publish_mock.assert_called_with(URL, BUCKET)
 
 
 def test_cli_errors(monkeypatch):
@@ -64,7 +61,3 @@ def test_cli_errors(monkeypatch):
 
     monkeypatch.setenv('PIPS3_BUCKET', URL)
     result = runner.invoke(cli.main)
-
-    assert result.exit_code != 0
-    assert isinstance(result.exception, InvalidConfig)
-    assert 'package name not specified' in str(result.exception)

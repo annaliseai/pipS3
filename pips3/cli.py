@@ -12,14 +12,12 @@ from pips3.exceptions import InvalidConfig
 @click.command()
 @click.option('--endpoint', default=None, help='S3 Endpoint')
 @click.option('--bucket', default=None, help='S3 Bucket')
-@click.option('--package', default=None, help='Package Name')
-def main(endpoint, bucket, package):
+def main(endpoint, bucket):
     """Console script for pips3."""
 
     # Try a number of options for determining configuration values
     endpoint = os.getenv('PIPS3_ENDPOINT') if endpoint is None else endpoint
     bucket = os.getenv('PIPS3_BUCKET') if bucket is None else bucket
-    package = os.getenv('PIPS3_PACKAGE') if package is None else package
 
     # TODO: #2 Allow retrieving of values from pip.conf
 
@@ -30,10 +28,7 @@ def main(endpoint, bucket, package):
     if bucket is None:
         raise InvalidConfig("Error!!! S3 bucket not specified")
 
-    if package is None:
-        raise InvalidConfig("Error!!! S3 package name not specified")
-
-    publish_packages(endpoint, bucket, package)
+    publish_packages(endpoint, bucket)
     return 0
 
 
