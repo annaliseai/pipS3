@@ -1,9 +1,8 @@
 include README.rst
 include versioneer.py
-include s3pkgup/_version.py
-include s3pkgup/data/index.html.j2
+include pips3/_version.py
 
-recursive-include tests *
+recursive-exclude tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 

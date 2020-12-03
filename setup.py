@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """The setup script."""
 
 import versioneer
 from setuptools import find_packages, setup
 
-with open('README.rst') as readme_file:
-    readme = readme_file.read()
+with open('README.md') as readme_file:
+    long_description = readme_file.read()
 
 requirements = [
-    'boto3>=1.12.20',
-    'Jinja2>=2.11.1',
-    'Click>=7.0',
+    'boto3>=1.16.4',
+    'Click>=7.1.2',
     'versioneer>=0.18',
 ]
 
@@ -21,8 +19,8 @@ setup_requirements = [
 ]
 
 test_requirements = [
-    'pytest>=5.1.2',
-    'pytest-cov>=2.7.1',
+    'pytest>=6.1.1',
+    'pytest-cov>=20.10.1',
 ]
 
 setup(
@@ -30,28 +28,30 @@ setup(
     author_email='ben.johnston@annalise.ai',
     python_requires='!=2.*, >=3.6',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
-    description="Python Boilerplate contains all the boilerplate you need to create a Python package.",
+    description=
+    "A handy package for creating a simple pypi repo in S3 compliant object storage.",
     entry_points={
         'console_scripts': [
-            's3pkgup=s3pkgup.cli:main',
+            'pips3=pips3.cli:main',
         ],
     },
     install_requires=requirements,
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     include_package_data=True,
-    keywords='s3pkgup',
-    name='s3pkgup',
-     package_data={'s3pkgup': ['data/index.html.j2']},
-    packages=find_packages(include=['s3pkgup']),
+    keywords=['pips3', 's3', 'pip', 'pypi'],
+    name='pips3',
+    packages=find_packages(include=['pips3']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
-    url='https://bitbucket.org/harrison-ai/s3pkgup',
+    url='https://github.com/AnnaliseAI/pipS3',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     zip_safe=False,

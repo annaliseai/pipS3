@@ -10,12 +10,12 @@ parallel = true
 
 [paths]
 source =
-    s3pkgup 
+    pips3 
 
 [report]
 precision = 2
 include =
-    s3pkgup/*.py 
+    pips3/*.py 
 exclude_lines =
     def __str__
     pragma: no cover

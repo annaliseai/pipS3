@@ -1,4 +1,4 @@
-Welcome to s3pkgup's documentation!
+Welcome to pips3's documentation!
 ============================================================
 
 .. toctree::
