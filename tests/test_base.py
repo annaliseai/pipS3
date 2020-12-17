@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 """Tests for `pips3` package."""
 
+from unittest.mock import MagicMock, call, patch
+
 import boto3
 import pytest
-from unittest.mock import patch
 from moto import mock_s3
 
 from pips3 import PipS3, publish_packages
@@ -119,7 +120,7 @@ def test_upload_index():
     project_name = "pips3"
     index = "index.html"
 
-    obj.upload_index(project_name, index)
+    obj.upload_index(project_name, index, False)
 
     # Check the file exists at the expected path
     s3_client.head_object(Bucket=BUCKET,
@@ -140,7 +141,7 @@ def test_publish_packages(files_mock):
 
     prefix = "simple"
 
-    publish_packages(ENDPOINT_URL, BUCKET)
+    publish_packages(ENDPOINT_URL, BUCKET, False)
 
     # Get the index
     index = s3_client.get_object(Bucket=BUCKET,
@@ -156,3 +157,23 @@ def test_publish_packages(files_mock):
 </html>"""
 
     assert index == expected_index
+
+
+@mock_s3
+@patch('pips3.base.PipS3.find_package_files',
+       return_value=[
+           'tests/assets/pips3-0.1.0.dev0.whl',
+           'tests/assets/pips3-0.1.0.whl',
+       ])
+def test_upload_index_public(files_mock):
+    """Upload packages with public ACL"""
+
+    uploader = PipS3('http://endpoint', 'some-bucket', s3_client=MagicMock())
+    uploader.upload_index('tests/assets/pips3-0.1.0.whl', 'some-pkg', True)
+
+    assert call(Bucket='some-bucket',
+                Key='simple/tests/assets/pips3-0.1.0.whl/index.html',
+                Body=b'some-pkg',
+                ACL='public-read',
+                ContentType='text/html'
+                ) in uploader.s3_client.put_object.call_args_list

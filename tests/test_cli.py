@@ -4,8 +4,8 @@
 
 from unittest.mock import patch
 
-from click.testing import CliRunner
 import pytest
+from click.testing import CliRunner
 
 from pips3 import cli
 from pips3.exceptions import InvalidConfig
@@ -23,7 +23,19 @@ def test_command_line_interface(publish_mock):
     result = runner.invoke(cli.main, ['--endpoint', URL, '--bucket', BUCKET])
 
     assert result.exit_code == 0
-    publish_mock.assert_called_with(URL, BUCKET)
+    publish_mock.assert_called_with(URL, BUCKET, False)
+
+
+@patch('pips3.cli.publish_packages')
+def test_command_line_interface_public(publish_mock):
+    """Test the CLI."""
+    runner = CliRunner()
+
+    result = runner.invoke(cli.main, ['--endpoint', URL, '--bucket', BUCKET, '--public'])
+
+    assert result.exit_code == 0
+    publish_mock.assert_called_with(URL, BUCKET, True)
+
 
 
 @patch('pips3.cli.publish_packages')
@@ -38,7 +50,7 @@ def test_command_line_interface_envars(publish_mock, monkeypatch):
     result = runner.invoke(cli.main)
 
     assert result.exit_code == 0
-    publish_mock.assert_called_with(URL, BUCKET)
+    publish_mock.assert_called_with(URL, BUCKET, False)
 
 
 def test_cli_errors(monkeypatch):

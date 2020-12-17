@@ -138,13 +138,13 @@ class PipS3:
         template += INDEX_TEMPLATE_OUTTRO
         return template
 
-    def upload_package(self, pkg_path: str, package_name: str):
+    def upload_package(self, pkg_path: str, package_name: str, public: bool=False):
         """Upload the package to S3
 
         Args:
             pkg_path (str): The path to the package file to upload 
             package_name (str): The name of the package 
-
+            public (bool): Set to True to enable Public Read ACL in S3 
         Raises:
             PackageExistsException: If a package file with the same name
                 already exists for this project
@@ -163,20 +163,21 @@ class PipS3:
             self.s3_client.upload_file(pkg_path,
                                        self.bucket,
                                        key,
-                                       ExtraArgs={"ACL": "public-read"})
+                                       ExtraArgs={"ACL": "public-read"} if public else None)
             return
 
         raise PackageExistsException(
             "Package %s already exists in the S3 Bucket for the project %s",
             os.path.basename(pkg_path), package_name)
 
-    def upload_index(self, package_name: str, index: Union[str, None] = None):
+    def upload_index(self, package_name: str, index: Union[str, None] = None, public: bool=False):
         """Upload the index file
 
         Args:
             package_name (str): The name of the package 
             index (Union[str, None], optional): The contents of the index file. Defaults
                 to None, where an index file will be automatically generated.
+            public (bool): Set to True to enable Public Read ACL in S3 
         """
         generated_index = self.generate_index() if index is None else index
         key = f'{self.prefix}/{package_name}/index.html'
@@ -184,16 +185,17 @@ class PipS3:
         self.s3_client.put_object(Bucket=self.bucket,
                                   Key=key,
                                   Body=generated_index.encode('utf-8'),
-                                  ACL="public-read",
+                                  ACL="public-read" if public else '',
                                   ContentType="text/html")
 
 
-def publish_packages(endpoint: str, bucket: str):
+def publish_packages(endpoint: str, bucket: str, public: bool=False):
     """Publish current package files
 
     Args:
         endpoint (str): The endpoint for the S3-like service 
         bucket (str): The name of the bucket to use 
+        public (bool): Set to True to enable Public Read ACL in S3 
     """
 
     uploader = PipS3(endpoint, bucket)
@@ -208,7 +210,7 @@ def publish_packages(endpoint: str, bucket: str):
             package_name = os.path.basename(upload_file).split('-')[0]
             package_name = package_name.replace('_', '-')
 
-        uploader.upload_package(upload_file, package_name)
+        uploader.upload_package(upload_file, package_name, public)
 
     # Update the index
     uploader.upload_index(package_name)

@@ -12,7 +12,8 @@ from pips3.exceptions import InvalidConfig
 @click.command()
 @click.option('--endpoint', default=None, help='S3 Endpoint')
 @click.option('--bucket', default=None, help='S3 Bucket')
-def main(endpoint, bucket):
+@click.option('--public/--no-public', default=False, help='Enable/Disable S3 Public ACL')
+def main(endpoint, bucket, public):
     """Console script for pips3."""
 
     # Try a number of options for determining configuration values
@@ -28,7 +29,7 @@ def main(endpoint, bucket):
     if bucket is None:
         raise InvalidConfig("Error!!! S3 bucket not specified")
 
-    publish_packages(endpoint, bucket)
+    publish_packages(endpoint, bucket, public)
     return 0
 
 
