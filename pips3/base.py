@@ -30,7 +30,7 @@ class PipS3:
     Use S3 compliant object storage as a simple pypi repository
 
     Args:
-        endpoint (str): The storage endpoint e.g. https://some-bucket.s3-website-ap-southeast-2.amazonaws.com 
+        endpoint (str): The storage endpoint e.g. https://some-bucket.s3-website-ap-southeast-2.amazonaws.com
         bucket (str): The name of the bucket storing the build artifacts
         prefix (str, optional): The prefix to apply to all s3 keys. Defaults to 'simple'
         s3_client (boto3.Session.client, optional): A boto3 S3 session client. Defaults to None, whereby a new
@@ -82,23 +82,23 @@ class PipS3:
     def list_keys(
             self,
             max_keys: int = 1000,
-            project_name: Union[str, None] = None,
+            package_name: Union[str, None] = None,
             continuation_token: Union[str, None] = None) -> Iterable[str]:
         """List keys in S3
 
         Args:
             max_keys (int, optional): The number of keys to retrieve per attempt. Defaults to 1000.
-            project_name (str, optional): List the keys for the specified project only. Defaults to None,
+            package_name (str, optional): List the keys for the specified project only. Defaults to None,
             continuation_token (str, optional): The boto3 continuation token for the next series of responses. Defaults to 1000.
 
-        Yields: 
+        Yields:
             Iterable[str]: The paths to the keys in the bucket
         """
 
         kwargs = {
             "Bucket": self.bucket,
             "Prefix": self.prefix
-            if project_name is None else f"{self.prefix}/{project_name}",
+            if package_name is None else f"{self.prefix}/{package_name}",
             "MaxKeys": max_keys,
         }
         if continuation_token is not None:
@@ -116,18 +116,25 @@ class PipS3:
                     continuation_token=response['NextContinuationToken']):
                 yield key
 
-    def generate_index(self, keys: Union[Iterable[str], None] = None) -> str:
+    def generate_index(
+        self,
+        keys: Union[Iterable[str], None] = None,
+        package_name: Union[str, None] = None,
+    ) -> str:
         """Generate a pypi index file
 
         Args:
             keys (Union[Iterable[str], None], optional): The keys of the s3 bucket.
                 Defaults to None.  If set to None, a list of S3 keys will be generated.
+            package_name (Union[str, None], optional): The package name.  If set to None,
+                an index of all packages is generated
 
         Returns:
             str: The rendered template
         """
 
-        raw_keys = self.list_keys() if keys is None else keys
+        raw_keys = self.list_keys(
+            package_name=package_name) if keys is None else keys
 
         template = INDEX_TEMPLATE_INTO
 
@@ -138,13 +145,16 @@ class PipS3:
         template += INDEX_TEMPLATE_OUTTRO
         return template
 
-    def upload_package(self, pkg_path: str, package_name: str, public: bool=False):
+    def upload_package(self,
+                       pkg_path: str,
+                       package_name: str,
+                       public: bool = False):
         """Upload the package to S3
 
         Args:
-            pkg_path (str): The path to the package file to upload 
-            package_name (str): The name of the package 
-            public (bool): Set to True to enable Public Read ACL in S3 
+            pkg_path (str): The path to the package file to upload
+            package_name (str): The name of the package
+            public (bool): Set to True to enable Public Read ACL in S3
         Raises:
             PackageExistsException: If a package file with the same name
                 already exists for this project
@@ -160,26 +170,31 @@ class PipS3:
 
         # The files does not exist we can upload
         except self.s3_client.exceptions.ClientError:
-            self.s3_client.upload_file(pkg_path,
-                                       self.bucket,
-                                       key,
-                                       ExtraArgs={"ACL": "public-read"} if public else None)
+            self.s3_client.upload_file(
+                pkg_path,
+                self.bucket,
+                key,
+                ExtraArgs={"ACL": "public-read"} if public else None)
             return
 
         raise PackageExistsException(
             "Package %s already exists in the S3 Bucket for the project %s",
             os.path.basename(pkg_path), package_name)
 
-    def upload_index(self, package_name: str, index: Union[str, None] = None, public: bool=False):
+    def upload_index(self,
+                     package_name: Union[str, None] = None,
+                     index: Union[str, None] = None,
+                     public: bool = False):
         """Upload the index file
 
         Args:
-            package_name (str): The name of the package 
+            package_name (Union[str, None], optional): The name of the package. Defaults to None
             index (Union[str, None], optional): The contents of the index file. Defaults
                 to None, where an index file will be automatically generated.
-            public (bool): Set to True to enable Public Read ACL in S3 
+            public (bool, optional): Set to True to enable Public Read ACL in S3.  Defaults to False
         """
-        generated_index = self.generate_index() if index is None else index
+        generated_index = self.generate_index(
+            package_name=package_name) if index is None else index
         key = f'{self.prefix}/{package_name}/index.html'
         logger.info("Uploading index to s3://%s/%s", self.bucket, key)
         self.s3_client.put_object(Bucket=self.bucket,
@@ -189,13 +204,13 @@ class PipS3:
                                   ContentType="text/html")
 
 
-def publish_packages(endpoint: str, bucket: str, public: bool=False):
+def publish_packages(endpoint: str, bucket: str, public: bool = False):
     """Publish current package files
 
     Args:
-        endpoint (str): The endpoint for the S3-like service 
-        bucket (str): The name of the bucket to use 
-        public (bool): Set to True to enable Public Read ACL in S3 
+        endpoint (str): The endpoint for the S3-like service
+        bucket (str): The name of the bucket to use
+        public (bool): Set to True to enable Public Read ACL in S3
     """
 
     uploader = PipS3(endpoint, bucket)

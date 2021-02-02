@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for `pips3` package."""
 
+import random
 from unittest.mock import MagicMock, call, patch
 
 import boto3
@@ -29,18 +30,55 @@ def test_list_bucket():
 
     for i in range(11):
 
-        key = f'{PREFIX}/{i}.bin'
+        key = f'{PREFIX}/pkg1/{i}.bin'
         s3_client.put_object(
             Bucket=BUCKET,
             Body=f'{i}'.encode(),
             Key=key,
         )
+
         expected_keys.append(key)
 
     # Create PipS3 object
     obj = PipS3(ENDPOINT_URL, BUCKET, PREFIX, s3_client)
 
     keys = [key for key in obj.list_keys(max_keys=2)]
+
+    expected_keys.sort()
+    keys.sort()
+
+    assert keys == expected_keys
+
+
+@mock_s3
+def test_list_project():
+    """Test listing files for a project"""
+
+    s3_client = boto3.client('s3', region_name='us-east-1')
+
+    ## Populate the bucket with some files
+    s3_client.create_bucket(Bucket=BUCKET)
+
+    expected_keys = []
+
+    for i in range(11):
+
+        pkg_name = 'proj1' if i > random.randint(1, 8) else 'proj2'
+
+        key = f'{PREFIX}/{pkg_name}/{i}.bin'
+        s3_client.put_object(
+            Bucket=BUCKET,
+            Body=f'{i}'.encode(),
+            Key=key,
+        )
+
+        if pkg_name == 'proj2':
+            expected_keys.append(key)
+
+    # Create PipS3 object
+    obj = PipS3(ENDPOINT_URL, BUCKET, PREFIX, s3_client)
+
+    keys = [key for key in obj.list_keys(package_name='proj2', max_keys=2)]
 
     expected_keys.sort()
     keys.sort()
@@ -95,17 +133,17 @@ def test_upload_package():
 
     obj = PipS3(ENDPOINT_URL, BUCKET, PREFIX)
 
-    project_name = "pips3"
+    package_name = "pips3"
 
-    obj.upload_package(fake_pkg, project_name)
+    obj.upload_package(fake_pkg, package_name)
 
     # Check the file exists at the expected path
     s3_client.head_object(Bucket=BUCKET,
-                          Key=f'{PREFIX}/{project_name}/{fake_pkg}')
+                          Key=f'{PREFIX}/{package_name}/{fake_pkg}')
 
     # Test error when trying to upload twice
     with pytest.raises(PackageExistsException):
-        obj.upload_package(fake_pkg, project_name)
+        obj.upload_package(fake_pkg, package_name)
 
 
 @mock_s3
@@ -115,16 +153,17 @@ def test_upload_index():
     s3_client = boto3.client('s3', region_name='us-east-1')
     s3_client.create_bucket(Bucket=BUCKET)
 
+    package_name = "pips3"
+
     obj = PipS3(ENDPOINT_URL, BUCKET, PREFIX)
 
-    project_name = "pips3"
     index = "index.html"
 
-    obj.upload_index(project_name, index, False)
+    obj.upload_index(package_name, index, False)
 
     # Check the file exists at the expected path
     s3_client.head_object(Bucket=BUCKET,
-                          Key=f'{PREFIX}/{project_name}/index.html')
+                          Key=f'{PREFIX}/{package_name}/index.html')
 
 
 @mock_s3
@@ -140,6 +179,18 @@ def test_publish_packages(files_mock):
     s3_client.create_bucket(Bucket=BUCKET)
 
     prefix = "simple"
+
+    # Contaminate the bucket with some random data
+    for i in range(11):
+
+        pkg_name = 'proj1' if i > random.randint(1, 8) else 'proj2'
+
+        key = f'{prefix}/{pkg_name}/{i}.whl'
+        s3_client.put_object(
+            Bucket=BUCKET,
+            Body=f'{i}'.encode(),
+            Key=key,
+        )
 
     publish_packages(ENDPOINT_URL, BUCKET, False)
 
