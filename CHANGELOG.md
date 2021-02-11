@@ -27,3 +27,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 11-02-2020
 ### Added
 * Allow bucket-owner-full-control permissions for cross AWS account builds
+
+## [0.4.1]

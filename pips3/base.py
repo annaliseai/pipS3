@@ -179,7 +179,7 @@ class PipS3:
                 ExtraArgs["ACL"] = "public-read"
 
             if owner_full_control:
-                ExtraArgs["GrantFullControl"] = "full-control"
+                ExtraArgs["ACL"] = "bucket-owner-full-control"
 
             self.s3_client.upload_file(pkg_path,
                                        self.bucket,
@@ -216,12 +216,11 @@ class PipS3:
                                        Body=generated_index.encode('utf-8'),
                                        ContentType="text/html")
 
-        if public:
+        if public and not owner_full_control:
             put_object = functools.partial(put_object, ACL='public-read')
 
         if owner_full_control:
-            put_object = functools.partial(put_object,
-                                           GrantFullControl='full-control')
+            put_object = functools.partial(put_object, ACL='full-control')
 
         put_object()
 
