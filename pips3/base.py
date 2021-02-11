@@ -220,7 +220,7 @@ class PipS3:
             put_object = functools.partial(put_object, ACL='public-read')
 
         if owner_full_control:
-            put_object = functools.partial(put_object, ACL='full-control')
+            put_object = functools.partial(put_object, ACL='bucket-owner-full-control')
 
         put_object()
 
