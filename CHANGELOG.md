@@ -16,11 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Automatically determine package name
 
-### [0.3.0] - 17-12-2020
+## [0.3.0] - 17-12-2020
 ### Added
 * Enable / disable public S3 ACL via command line
 
-### [0.3.1] - 17-12-2020
+## [0.3.1] - 17-12-2020
 ### Bugfix
 * Add package name to generate_index method to filter out unrelated package files in index.html files
 
+## [0.4.0] - 11-02-2020
+### Added
+* Allow bucket-owner-full-control permissions for cross AWS account builds

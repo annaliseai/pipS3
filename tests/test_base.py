@@ -105,6 +105,20 @@ def test_find_packages():
     assert packages == expected
 
 
+def _assert_pkg_metadata(metadata):
+    assert len(metadata['Grants']) == 2
+
+    for grant in metadata['Grants']:
+        assert (grant['Permission'] == 'FULL_CONTROL') or (grant['Permission']
+                                                           == 'READ')
+
+        if grant['Permission'] == 'READ':
+            assert 'AllUsers' in grant['Grantee']['URI']
+
+        if grant['Permission'] == 'FULL_CONTROL':
+            assert grant['Grantee']['Type'] == 'CanonicalUser'
+
+
 def test_generate_index_template():
     """Test generating index template"""
 
@@ -135,11 +149,13 @@ def test_upload_package():
 
     package_name = "pips3"
 
-    obj.upload_package(fake_pkg, package_name)
+    obj.upload_package(fake_pkg, package_name, True, True)
 
     # Check the file exists at the expected path
-    s3_client.head_object(Bucket=BUCKET,
-                          Key=f'{PREFIX}/{package_name}/{fake_pkg}')
+    metadata = s3_client.get_object_acl(
+        Bucket=BUCKET, Key=f'{PREFIX}/{package_name}/{fake_pkg}')
+
+    _assert_pkg_metadata(metadata)
 
     # Test error when trying to upload twice
     with pytest.raises(PackageExistsException):
@@ -164,6 +180,28 @@ def test_upload_index():
     # Check the file exists at the expected path
     s3_client.head_object(Bucket=BUCKET,
                           Key=f'{PREFIX}/{package_name}/index.html')
+
+
+@mock_s3
+def test_upload_index_acls():
+    """Test uploading an index"""
+
+    s3_client = boto3.client('s3', region_name='us-east-1')
+    s3_client.create_bucket(Bucket=BUCKET)
+
+    package_name = "pips3"
+
+    obj = PipS3(ENDPOINT_URL, BUCKET, PREFIX)
+
+    index = "index.html"
+
+    obj.upload_index(package_name, index, True, True)
+
+    # Check the file exists at the expected path
+    metadata = s3_client.get_object_acl(
+        Bucket=BUCKET, Key=f'{PREFIX}/{package_name}/index.html')
+
+    _assert_pkg_metadata(metadata)
 
 
 @mock_s3
@@ -208,23 +246,3 @@ def test_publish_packages(files_mock):
 </html>"""
 
     assert index == expected_index
-
-
-@mock_s3
-@patch('pips3.base.PipS3.find_package_files',
-       return_value=[
-           'tests/assets/pips3-0.1.0.dev0.whl',
-           'tests/assets/pips3-0.1.0.whl',
-       ])
-def test_upload_index_public(files_mock):
-    """Upload packages with public ACL"""
-
-    uploader = PipS3('http://endpoint', 'some-bucket', s3_client=MagicMock())
-    uploader.upload_index('tests/assets/pips3-0.1.0.whl', 'some-pkg', True)
-
-    assert call(Bucket='some-bucket',
-                Key='simple/tests/assets/pips3-0.1.0.whl/index.html',
-                Body=b'some-pkg',
-                ACL='public-read',
-                ContentType='text/html'
-                ) in uploader.s3_client.put_object.call_args_list

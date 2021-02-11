@@ -23,7 +23,7 @@ def test_command_line_interface(publish_mock):
     result = runner.invoke(cli.main, ['--endpoint', URL, '--bucket', BUCKET])
 
     assert result.exit_code == 0
-    publish_mock.assert_called_with(URL, BUCKET, False)
+    publish_mock.assert_called_with(URL, BUCKET, False, False)
 
 
 @patch('pips3.cli.publish_packages')
@@ -31,11 +31,24 @@ def test_command_line_interface_public(publish_mock):
     """Test the CLI."""
     runner = CliRunner()
 
-    result = runner.invoke(cli.main, ['--endpoint', URL, '--bucket', BUCKET, '--public'])
+    result = runner.invoke(cli.main,
+                           ['--endpoint', URL, '--bucket', BUCKET, '--public'])
 
     assert result.exit_code == 0
-    publish_mock.assert_called_with(URL, BUCKET, True)
+    publish_mock.assert_called_with(URL, BUCKET, True, False)
 
+
+@patch('pips3.cli.publish_packages')
+def test_command_line_interface_owner_control(publish_mock):
+    """Test the CLI."""
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli.main,
+        ['--endpoint', URL, '--bucket', BUCKET, '--bucket-owner-full-control'])
+
+    assert result.exit_code == 0
+    publish_mock.assert_called_with(URL, BUCKET, False, True)
 
 
 @patch('pips3.cli.publish_packages')
@@ -50,7 +63,7 @@ def test_command_line_interface_envars(publish_mock, monkeypatch):
     result = runner.invoke(cli.main)
 
     assert result.exit_code == 0
-    publish_mock.assert_called_with(URL, BUCKET, False)
+    publish_mock.assert_called_with(URL, BUCKET, False, False)
 
 
 def test_cli_errors(monkeypatch):

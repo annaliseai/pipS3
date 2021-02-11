@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Base Class"""
 
+import functools
 import logging
 import os
 import sys
@@ -148,13 +149,15 @@ class PipS3:
     def upload_package(self,
                        pkg_path: str,
                        package_name: str,
-                       public: bool = False):
+                       public: bool = False,
+                       owner_full_control: bool = False):
         """Upload the package to S3
 
         Args:
             pkg_path (str): The path to the package file to upload
             package_name (str): The name of the package
             public (bool): Set to True to enable Public Read ACL in S3
+            owner_full_control (bool, optional): Set to True to provide bucket owner full control.  Defaults to False.
         Raises:
             PackageExistsException: If a package file with the same name
                 already exists for this project
@@ -170,11 +173,18 @@ class PipS3:
 
         # The files does not exist we can upload
         except self.s3_client.exceptions.ClientError:
-            self.s3_client.upload_file(
-                pkg_path,
-                self.bucket,
-                key,
-                ExtraArgs={"ACL": "public-read"} if public else None)
+
+            ExtraArgs = {}
+            if public:
+                ExtraArgs["ACL"] = "public-read"
+
+            if owner_full_control:
+                ExtraArgs["GrantFullControl"] = "full-control"
+
+            self.s3_client.upload_file(pkg_path,
+                                       self.bucket,
+                                       key,
+                                       ExtraArgs=ExtraArgs)
             return
 
         raise PackageExistsException(
@@ -184,7 +194,8 @@ class PipS3:
     def upload_index(self,
                      package_name: Union[str, None] = None,
                      index: Union[str, None] = None,
-                     public: bool = False):
+                     public: bool = False,
+                     owner_full_control: bool = False):
         """Upload the index file
 
         Args:
@@ -192,25 +203,40 @@ class PipS3:
             index (Union[str, None], optional): The contents of the index file. Defaults
                 to None, where an index file will be automatically generated.
             public (bool, optional): Set to True to enable Public Read ACL in S3.  Defaults to False
+            owner_full_control (bool, optional): Set to True to provide bucket owner full control.  Defaults to False.
         """
         generated_index = self.generate_index(
             package_name=package_name) if index is None else index
         key = f'{self.prefix}/{package_name}/index.html'
         logger.info("Uploading index to s3://%s/%s", self.bucket, key)
-        self.s3_client.put_object(Bucket=self.bucket,
-                                  Key=key,
-                                  Body=generated_index.encode('utf-8'),
-                                  ACL="public-read" if public else '',
-                                  ContentType="text/html")
+
+        put_object = functools.partial(self.s3_client.put_object,
+                                       Bucket=self.bucket,
+                                       Key=key,
+                                       Body=generated_index.encode('utf-8'),
+                                       ContentType="text/html")
+
+        if public:
+            put_object = functools.partial(put_object, ACL='public-read')
+
+        if owner_full_control:
+            put_object = functools.partial(put_object,
+                                           GrantFullControl='full-control')
+
+        put_object()
 
 
-def publish_packages(endpoint: str, bucket: str, public: bool = False):
+def publish_packages(endpoint: str,
+                     bucket: str,
+                     public: bool = False,
+                     owner_full_control: bool = False):
     """Publish current package files
 
     Args:
         endpoint (str): The endpoint for the S3-like service
         bucket (str): The name of the bucket to use
         public (bool): Set to True to enable Public Read ACL in S3
+        transfer_ownership (bool): Set to True to transfer ownership in S3 to bucket owner
     """
 
     uploader = PipS3(endpoint, bucket)
@@ -225,7 +251,8 @@ def publish_packages(endpoint: str, bucket: str, public: bool = False):
             package_name = os.path.basename(upload_file).split('-')[0]
             package_name = package_name.replace('_', '-')
 
-        uploader.upload_package(upload_file, package_name, public)
+        uploader.upload_package(upload_file, package_name, public,
+                                owner_full_control)
 
     # Update the index
     uploader.upload_index(package_name)
