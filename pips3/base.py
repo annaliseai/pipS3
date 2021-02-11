@@ -210,19 +210,15 @@ class PipS3:
         key = f'{self.prefix}/{package_name}/index.html'
         logger.info("Uploading index to s3://%s/%s", self.bucket, key)
 
-        put_object = functools.partial(self.s3_client.put_object,
-                                       Bucket=self.bucket,
-                                       Key=key,
-                                       Body=generated_index.encode('utf-8'),
-                                       ContentType="text/html")
+        acl = 'bucket-owner-full-control' if owner_full_control else ''
+        if public:
+            acl = 'public-read'
 
-        if public and not owner_full_control:
-            put_object = functools.partial(put_object, ACL='public-read')
-
-        if owner_full_control:
-            put_object = functools.partial(put_object, ACL='bucket-owner-full-control')
-
-        put_object()
+        self.s3_client.put_object(Bucket=self.bucket,
+                                  Key=key,
+                                  Body=generated_index.encode('utf-8'),
+                                  ACL=acl,
+                                  ContentType="text/html")
 
 
 def publish_packages(endpoint: str,
