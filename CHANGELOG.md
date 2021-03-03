@@ -24,8 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bugfix
 * Add package name to generate_index method to filter out unrelated package files in index.html files
 
-## [0.4.0] - 11-02-2020
+## [0.4.0] - 11-02-2021
 ### Added
 * Allow bucket-owner-full-control permissions for cross AWS account builds
 
-## [0.4.1]
+## [0.4.1] - 03-03-2021
+### BugFix
+* Flag conflict between public-read and bucket-owner-full-control options.  AWS does not allow both at the same time
