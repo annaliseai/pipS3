@@ -174,11 +174,17 @@ class PipS3:
         # The files does not exist we can upload
         except self.s3_client.exceptions.ClientError:
 
-            acl = 'bucket-owner-full-control' if owner_full_control else ''
+            extra_args = {}
             if public:
-                acl = 'public-read'
+                extra_args["ACL"] = "public-read"
 
-            self.s3_client.upload_file(pkg_path, self.bucket, key, ACL=acl)
+            if owner_full_control:
+                extra_args["ACL"] = "bucket-owner-full-control"
+
+            self.s3_client.upload_file(pkg_path,
+                                       self.bucket,
+                                       key,
+                                       ExtraArgs=extra_args)
             return
 
         raise PackageExistsException(
