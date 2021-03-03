@@ -250,4 +250,6 @@ def publish_packages(endpoint: str,
                                 owner_full_control)
 
     # Update the index
-    uploader.upload_index(package_name)
+    uploader.upload_index(package_name,
+                          public=public,
+                          owner_full_control=owner_full_control)
