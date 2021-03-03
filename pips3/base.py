@@ -174,17 +174,17 @@ class PipS3:
         # The files does not exist we can upload
         except self.s3_client.exceptions.ClientError:
 
-            ExtraArgs = {}
+            extra_args = {}
             if public:
-                ExtraArgs["ACL"] = "public-read"
+                extra_args["ACL"] = "public-read"
 
             if owner_full_control:
-                ExtraArgs["GrantFullControl"] = "full-control"
+                extra_args["ACL"] = "bucket-owner-full-control"
 
             self.s3_client.upload_file(pkg_path,
                                        self.bucket,
                                        key,
-                                       ExtraArgs=ExtraArgs)
+                                       ExtraArgs=extra_args)
             return
 
         raise PackageExistsException(
@@ -210,20 +210,15 @@ class PipS3:
         key = f'{self.prefix}/{package_name}/index.html'
         logger.info("Uploading index to s3://%s/%s", self.bucket, key)
 
-        put_object = functools.partial(self.s3_client.put_object,
-                                       Bucket=self.bucket,
-                                       Key=key,
-                                       Body=generated_index.encode('utf-8'),
-                                       ContentType="text/html")
-
+        acl = 'bucket-owner-full-control' if owner_full_control else ''
         if public:
-            put_object = functools.partial(put_object, ACL='public-read')
+            acl = 'public-read'
 
-        if owner_full_control:
-            put_object = functools.partial(put_object,
-                                           GrantFullControl='full-control')
-
-        put_object()
+        self.s3_client.put_object(Bucket=self.bucket,
+                                  Key=key,
+                                  Body=generated_index.encode('utf-8'),
+                                  ACL=acl,
+                                  ContentType="text/html")
 
 
 def publish_packages(endpoint: str,
@@ -255,4 +250,6 @@ def publish_packages(endpoint: str,
                                 owner_full_control)
 
     # Update the index
-    uploader.upload_index(package_name)
+    uploader.upload_index(package_name,
+                          public=public,
+                          owner_full_control=owner_full_control)

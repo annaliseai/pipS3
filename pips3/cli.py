@@ -19,9 +19,14 @@ from pips3.exceptions import InvalidConfig
 @click.option('--bucket-owner-full-control/--no-bucket-owner-full-control',
               default=False,
               type=bool,
-              help='Enable S3 Public ACL')
+              help='Enable S3 Bucket Owner Full Control ACL')
 def main(endpoint, bucket, public, bucket_owner_full_control):
     """Console script for pips3."""
+
+    if public and bucket_owner_full_control:
+        raise ValueError(
+            "Cannot enable Public ACL and Bucket Owner Full Control ACL at the same time"
+        )
 
     # Try a number of options for determining configuration values
     endpoint = os.getenv('PIPS3_ENDPOINT') if endpoint is None else endpoint
