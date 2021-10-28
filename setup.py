@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 """The setup script."""
 
-import versioneer
 from setuptools import find_packages, setup
+
+import versioneer
 
 with open('README.md') as readme_file:
     long_description = readme_file.read()
@@ -20,7 +21,8 @@ setup_requirements = [
 
 test_requirements = [
     'pytest>=6.1.1',
-    'pytest-cov>=20.10.1',
+    'pytest-cov>=2.10.1',
+    'moto>=1.3.16',
 ]
 
 setup(
