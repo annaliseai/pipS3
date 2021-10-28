@@ -10,6 +10,7 @@ import pytest
 from moto import mock_s3
 
 from pips3 import PipS3, publish_packages
+from pips3.base import get_package_name
 from pips3.exceptions import PackageExistsException
 
 ENDPOINT_URL = "http://localhost:9000"
@@ -246,3 +247,14 @@ def test_publish_packages(files_mock):
 </html>"""
 
     assert index == expected_index
+
+
+@pytest.mark.parametrize("upload_file,package_name", [
+    ("cdk_remote_stack-0.1.186-py3-none-any.whl", "cdk-remote-stack"),
+    ("cdk-remote-stack-0.1.186.tar.gz", "cdk-remote-stack"),
+    ("ipyxt-0.0.1.tar.gz", "ipyxt"),
+    ("scikit_learn-1.0.1-cp37-cp37m-macosx_10_13_x86_64.whl", "scikit-learn"),
+    ("scikit-learn-1.0.1.tar.gz", "scikit-learn")
+])
+def test_get_package_name(upload_file: str, package_name: str):
+    assert get_package_name(upload_file) == package_name

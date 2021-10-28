@@ -221,6 +221,26 @@ class PipS3:
                                   ContentType="text/html")
 
 
+def get_package_name(upload_file: str) -> str:
+    """determine the package name from the artifacts to be uploaded. According to pypi,
+    if upload_file is a tar.gz, then the package name is already canonical.
+    if upload_file is a whl, then we need to replace _ with -.
+    See tests for examples.
+
+    Args:
+        upload_file (str): path to the artifacts, tar.gz or whl
+
+    Returns:
+        str: package name
+    """
+    stem = os.path.basename(upload_file)
+    splitted = stem.split("-")
+    if upload_file.endswith(".gz"):
+        return "-".join(splitted[:-1]) # the last one is version
+    # else is "whl"
+    return splitted[0].replace('_', '-')
+
+
 def publish_packages(endpoint: str,
                      bucket: str,
                      public: bool = False,
@@ -243,8 +263,7 @@ def publish_packages(endpoint: str,
         # Get the package name
         if package_name is None:
 
-            package_name = os.path.basename(upload_file).split('-')[0]
-            package_name = package_name.replace('_', '-')
+            package_name = get_package_name(upload_file)
 
         uploader.upload_package(upload_file, package_name, public,
                                 owner_full_control)
